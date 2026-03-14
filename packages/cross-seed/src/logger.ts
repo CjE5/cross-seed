@@ -12,6 +12,7 @@ export enum Label {
 	RTORRENT = "rtorrent",
 	TRANSMISSION = "transmission",
 	DELUGE = "deluge",
+	QUI = "qui",
 	DECIDE = "decide",
 	PREFILTER = "prefilter",
 	CONFIG = "config",

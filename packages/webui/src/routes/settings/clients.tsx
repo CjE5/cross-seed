@@ -114,6 +114,7 @@ function TorrentClientsSettings() {
         let readOnly = false;
         let user = '';
         let password = '';
+        let tag: string | undefined;
 
         if (typeof client === 'object') {
           clientApp = client.client;
@@ -133,12 +134,23 @@ function TorrentClientsSettings() {
 
           if (!fullUrl) return null;
 
-          const sanitizedUrl = removeUserAndPassFromClientUrl(fullUrl);
-          if (!sanitizedUrl) return null;
+          if (clientApp === 'qui') {
+            // qui stores only an optional tag as a query param
+            try {
+              const parsedUrl = new URL(fullUrl);
+              url = `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}`;
+              tag = parsedUrl.searchParams.get('tag') ?? undefined;
+            } catch {
+              return null;
+            }
+          } else {
+            const sanitizedUrl = removeUserAndPassFromClientUrl(fullUrl);
+            if (!sanitizedUrl) return null;
 
-          url = sanitizedUrl;
-          user = getUserFromClientUrl(fullUrl);
-          password = getPassFromClientUrl(fullUrl);
+            url = sanitizedUrl;
+            user = getUserFromClientUrl(fullUrl);
+            password = getPassFromClientUrl(fullUrl);
+          }
         }
 
         if (!clientApp || !url) return null;
@@ -150,6 +162,7 @@ function TorrentClientsSettings() {
           user,
           password,
           readOnly,
+          tag,
         };
       })
       .filter(Boolean) as TDownloadClient[];
@@ -211,10 +224,11 @@ function TorrentClientsSettings() {
 
   const handleDeleteClient = (client: TDownloadClient) => {
     setOpenDropdown(null);
-    const updatedClients = clients?.filter((c) => c.url !== client.url);
-    setClients(updatedClients);
-    // Delete from the db
-    saveConfig({ torrentClients: updatedClients || [] });
+    // Filter the raw string array by index to avoid sending objects to the backend
+    const rawClients = (configData?.torrentClients ?? []) as string[];
+    const updatedRawClients = rawClients.filter((_, i) => i !== client.index);
+    setClients(clients?.filter((c) => c.index !== client.index));
+    saveConfig({ torrentClients: updatedRawClients });
   };
 
   const handleEditSheetOpenChange = (open: boolean) => {

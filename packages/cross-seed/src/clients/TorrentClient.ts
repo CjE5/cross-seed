@@ -24,6 +24,7 @@ import { Searchee, SearcheeClient, SearcheeWithInfoHash } from "../searchee.js";
 import { hasExt, isTruthy, wait } from "../utils.js";
 import Deluge from "./Deluge.js";
 import QBittorrent from "./QBittorrent.js";
+import Qui from "./Qui.js";
 import RTorrent from "./RTorrent.js";
 import Transmission from "./Transmission.js";
 
@@ -42,7 +43,8 @@ type TorrentClientType =
 	| Label.QBITTORRENT
 	| Label.RTORRENT
 	| Label.TRANSMISSION
-	| Label.DELUGE;
+	| Label.DELUGE
+	| Label.QUI;
 
 export type Tracker = { url: string; tier: number };
 
@@ -181,6 +183,11 @@ export function instantiateDownloadClients() {
 			case Label.DELUGE:
 				activeClients.push(
 					new Deluge(url, clientHost, priority, readonly),
+				);
+				break;
+			case Label.QUI:
+				activeClients.push(
+					new Qui(url, clientHost, priority, readonly),
 				);
 				break;
 			default:

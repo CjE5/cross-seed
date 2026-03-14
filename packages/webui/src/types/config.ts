@@ -25,6 +25,7 @@ export const clientValidationSchema = z.object({
   url: z.string().url(),
   user: z.string().nullish(),
   password: z.string().nullish(),
+  tag: z.string().nullish(),
   readOnly: z
     .boolean()
     .optional()

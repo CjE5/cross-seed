@@ -176,6 +176,7 @@ interface CategoryInfo {
 
 export default class QBittorrent implements TorrentClient {
 	cookie: string;
+	protected requestHeaders: Record<string, string> = {};
 	url: { username: string; password: string; href: string };
 	version: string;
 	versionMajor: number;
@@ -183,7 +184,7 @@ export default class QBittorrent implements TorrentClient {
 	versionPatch: number;
 	readonly clientHost: string;
 	readonly clientPriority: number;
-	readonly clientType = Label.QBITTORRENT;
+	readonly clientType: Label.QBITTORRENT | Label.QUI = Label.QBITTORRENT;
 	readonly readonly: boolean;
 	readonly label: string;
 
@@ -315,6 +316,7 @@ export default class QBittorrent implements TorrentClient {
 					headers: {
 						Cookie: this.cookie,
 						"User-Agent": USER_AGENT,
+						...this.requestHeaders,
 						...headers,
 					},
 					body,

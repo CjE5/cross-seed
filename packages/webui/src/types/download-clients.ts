@@ -7,4 +7,5 @@ export type TDownloadClient = {
   user?: string;
   password: string;
   readOnly?: boolean;
+  tag?: string;
 };

@@ -20,6 +20,7 @@ type DownloadClient = {
   user?: string;
   password: string;
   readOnly?: boolean;
+  tag?: string;
 };
 
 interface ClientViewSheetProps {
@@ -51,19 +52,32 @@ export default function ClientViewSheet({
             </div>
           </div>
 
-          <div className="grid gap-3">
-            <Label>Username</Label>
-            <div className="bg-muted/50 rounded-md border px-3 py-2 font-mono text-sm break-all">
-              {client?.user || 'N/A'}
-            </div>
-          </div>
+          {client?.client !== 'qui' && (
+            <>
+              <div className="grid gap-3">
+                <Label>Username</Label>
+                <div className="bg-muted/50 rounded-md border px-3 py-2 font-mono text-sm break-all">
+                  {client?.user || 'N/A'}
+                </div>
+              </div>
 
-          <div className="grid gap-3">
-            <Label>Password</Label>
-            <div className="bg-muted/50 rounded-md border px-3 py-2 font-mono text-sm break-all">
-              {client?.password ? '********' : 'N/A'}
+              <div className="grid gap-3">
+                <Label>Password</Label>
+                <div className="bg-muted/50 rounded-md border px-3 py-2 font-mono text-sm break-all">
+                  {client?.password ? '********' : 'N/A'}
+                </div>
+              </div>
+            </>
+          )}
+
+          {client?.client === 'qui' && client?.tag && (
+            <div className="grid gap-3">
+              <Label>Tag</Label>
+              <div className="bg-muted/50 rounded-md border px-3 py-2 font-mono text-sm break-all">
+                {client.tag}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="grid gap-3">
             <Label>Read only</Label>

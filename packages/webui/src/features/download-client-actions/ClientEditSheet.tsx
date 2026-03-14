@@ -41,6 +41,7 @@ const CLIENTS = {
   rtorrent: 'rTorrent',
   transmission: 'Transmission',
   deluge: 'Deluge',
+  qui: 'Qui',
 };
 
 export default function ClientEditSheet({
@@ -79,17 +80,26 @@ export default function ClientEditSheet({
         } else {
           // build url first
           const validatedData = result.data;
-          const protocol = getProtocolFromClientUrl(validatedData.url);
-          const host = getHostFromClientUrl(validatedData.url);
-          const clientString = buildClientUrl({
-            client: validatedData.client,
-            protocol,
-            host,
-            username: validatedData.user ?? '',
-            password: validatedData.password ?? '',
-            readonly: validatedData.readOnly,
-            // * TODO: add usePlugin for rtorrent clients
-          });
+          let clientString: string;
+          if (validatedData.client === 'qui') {
+            // qui: append optional tag as a query param
+            const params = new URLSearchParams();
+            if (validatedData.tag) params.set('tag', validatedData.tag);
+            const qs = params.toString();
+            clientString = `qui:${validatedData.readOnly ? 'readonly:' : ''}${validatedData.url}${qs ? `?${qs}` : ''}`;
+          } else {
+            const protocol = getProtocolFromClientUrl(validatedData.url);
+            const host = getHostFromClientUrl(validatedData.url);
+            clientString = buildClientUrl({
+              client: validatedData.client,
+              protocol,
+              host,
+              username: validatedData.user ?? '',
+              password: validatedData.password ?? '',
+              readonly: validatedData.readOnly,
+              // * TODO: add usePlugin for rtorrent clients
+            });
+          }
 
           let updatedClients: string[];
           if (mode === 'edit' && client && client.index !== undefined) {
@@ -122,13 +132,18 @@ export default function ClientEditSheet({
     const username = String(form.getFieldValue('user') || '');
     const password = String(form.getFieldValue('password') || '');
 
-    const testUrl = buildClientTestUrl({
-      client,
-      protocol: getProtocolFromClientUrl(url),
-      host: getHostFromClientUrl(url),
-      username,
-      password,
-    });
+    // For qui, the proxy URL is passed directly — auth is handled by the proxy key in the URL.
+    // For others, build a credential URL.
+    const testUrl =
+      client === 'qui'
+        ? url
+        : buildClientTestUrl({
+            client,
+            protocol: getProtocolFromClientUrl(url),
+            host: getHostFromClientUrl(url),
+            username,
+            password,
+          });
     const result = await testConnection({
       client,
       url: testUrl,
@@ -191,25 +206,51 @@ export default function ClientEditSheet({
                 </form.AppField>
               </div>
 
-              <div className="grid gap-3">
-                <form.AppField name="url">
-                  {(field) => <field.TextField label="Client URL" />}
-                </form.AppField>
-              </div>
+              <form.Subscribe selector={(state) => state.values.client}>
+                {(clientValue) => (
+                  <>
+                    <div className="grid gap-3">
+                      <form.AppField name="url">
+                        {(field) => (
+                          <field.TextField
+                            label={clientValue === 'qui' ? 'Proxy URL' : 'Client URL'}
+                          />
+                        )}
+                      </form.AppField>
+                    </div>
 
-              <div className="grid gap-3">
-                <form.AppField name="user">
-                  {(field) => <field.TextField label="User" />}
-                </form.AppField>
-              </div>
+                    {clientValue !== 'qui' && (
+                      <>
+                        <div className="grid gap-3">
+                          <form.AppField name="user">
+                            {(field) => (
+                              <field.TextField label="User" />
+                            )}
+                          </form.AppField>
+                        </div>
 
-              <div className="grid gap-3">
-                <form.AppField name="password">
-                  {(field) => (
-                    <field.TextField label="Password" type="password" />
-                  )}
-                </form.AppField>
-              </div>
+                        <div className="grid gap-3">
+                          <form.AppField name="password">
+                            {(field) => (
+                              <field.TextField label="Password" type="password" />
+                            )}
+                          </form.AppField>
+                        </div>
+                      </>
+                    )}
+
+                    {clientValue === 'qui' && (
+                      <div className="grid gap-3">
+                        <form.AppField name="tag">
+                          {(field) => (
+                            <field.TextField label="Tag (optional)" required={false} />
+                          )}
+                        </form.AppField>
+                      </div>
+                    )}
+                  </>
+                )}
+              </form.Subscribe>
 
               <div className="grid gap-3">
                 <form.AppField name="readOnly">
@@ -240,12 +281,15 @@ export default function ClientEditSheet({
                   // Determine if test button should be enabled
                   const urlValid = urlValue && !urlMeta?.errors?.length;
                   const passwordValid =
-                    clientValue === 'transmission' &&
-                    passwordValue === undefined
+                    (clientValue === 'transmission' &&
+                      passwordValue === undefined) ||
+                    clientValue === 'qui'
                       ? true
                       : passwordValue && !passwordMeta?.errors?.length;
                   const userValid =
-                    clientValue === 'deluge' || clientValue === 'transmission'
+                    clientValue === 'deluge' ||
+                    clientValue === 'transmission' ||
+                    clientValue === 'qui'
                       ? true
                       : userValue && !userMeta?.errors?.length;
 

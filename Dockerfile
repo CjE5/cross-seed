@@ -7,7 +7,8 @@ COPY packages/shared/package*.json packages/shared/tsconfig.json ./packages/shar
 COPY packages/api-types/package*.json packages/api-types/tsconfig.json ./packages/api-types/
 COPY packages/webui/package*.json packages/webui/tsconfig*.json ./packages/webui/
 ENV NPM_CONFIG_UPDATE_NOTIFIER=false
-RUN npm ci --workspaces --no-fund
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --workspaces --no-fund
 COPY packages/shared packages/shared
 COPY packages/api-types packages/api-types
 COPY packages/webui packages/webui

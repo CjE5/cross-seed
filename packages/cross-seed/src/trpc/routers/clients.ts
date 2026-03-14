@@ -6,7 +6,13 @@ import Deluge from "../../clients/Deluge.js";
 import Transmission from "../../clients/Transmission.js";
 
 const testConnectionInputSchema = z.object({
-	client: z.enum(["qbittorrent", "rtorrent", "transmission", "deluge"]),
+	client: z.enum([
+		"qbittorrent",
+		"rtorrent",
+		"transmission",
+		"deluge",
+		"qui",
+	]),
 	url: z.string().url(),
 	username: z.string().optional(),
 	password: z.string().optional(),
@@ -51,6 +57,18 @@ export const clientsRouter = router({
 						client = new Deluge(url, clientHost, 0, readonly);
 						await client.authenticate();
 						break;
+					case "qui": {
+						// Test by hitting the proxy-path indexer-categories endpoint.
+						// Auth is handled by the proxy key embedded in the URL.
+						const res = await fetch(
+							`${url}/api/v2/cross-seed/indexer-categories`,
+							{ signal: AbortSignal.timeout(10000) },
+						);
+						if (!res.ok)
+							throw new Error(`qui returned ${res.status}`);
+						message = "Successfully connected to qui.";
+						break;
+					}
 					default:
 						throw new Error(
 							`Unsupported client type: ${clientName}`,
